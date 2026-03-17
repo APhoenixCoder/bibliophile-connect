@@ -3,12 +3,13 @@ import { NextResponse } from "next/server"
 import { Groq } from "groq-sdk"
 
 const sql = neon(process.env.NEON_DATABASE_URL!)
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
 
 export async function POST() {
   try {
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    })
+
     // Get books without descriptions
     const booksWithoutDesc = await sql.query(
       `SELECT id, title, author FROM books WHERE (description IS NULL OR description = '') AND title IS NOT NULL LIMIT 50`
