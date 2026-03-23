@@ -1,7 +1,5 @@
-import { neon } from "@neondatabase/serverless"
+import { sql } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
-
-const sql = neon(process.env.NEON_DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,11 +17,15 @@ export async function GET(request: NextRequest) {
     try {
       if (type === "title") {
         // Search from the main books table and return both title and author
-        const booksResults = await sql.query("SELECT DISTINCT title, author FROM books WHERE title ILIKE $1 LIMIT 15", [searchQuery])
+        const booksResults = await sql`
+          SELECT DISTINCT title, author FROM books WHERE title ILIKE ${searchQuery} LIMIT 15
+        `
         suggestions = [...(booksResults || [])]
       } else if (type === "author") {
         // Search from the main books table first
-        const booksResults = await sql.query("SELECT DISTINCT author FROM books WHERE author ILIKE $1 LIMIT 15", [searchQuery])
+        const booksResults = await sql`
+          SELECT DISTINCT author FROM books WHERE author ILIKE ${searchQuery} LIMIT 15
+        `
         suggestions = [...(booksResults || [])]
       }
     } catch (sqlError) {

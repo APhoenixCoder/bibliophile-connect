@@ -1,7 +1,5 @@
-import { neon } from "@neondatabase/serverless"
+import { sql } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
-
-const sql = neon(process.env.NEON_DATABASE_URL!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,20 +15,18 @@ export async function POST(request: NextRequest) {
     const normalizedAuthor = author.toLowerCase()
 
     // Check if book already exists in the database (case-insensitive)
-    const existing = await sql.query(
-      "SELECT id FROM books WHERE LOWER(title) = $1 AND LOWER(author) = $2 LIMIT 1",
-      [normalizedTitle, normalizedAuthor]
-    )
+    const existing = await sql`
+      SELECT id FROM books WHERE LOWER(title) = ${normalizedTitle} AND LOWER(author) = ${normalizedAuthor} LIMIT 1
+    `
 
     if (existing && existing.length > 0) {
       return NextResponse.json({ success: true, isNew: false, message: "Book already exists in database" })
     }
 
     // Insert new book into the database
-    await sql.query(
-      "INSERT INTO books (title, author, genre) VALUES ($1, $2, $3)",
-      [normalizedTitle, normalizedAuthor, genre || null]
-    )
+    await sql`
+      INSERT INTO books (title, author, genre) VALUES (${normalizedTitle}, ${normalizedAuthor}, ${genre || null})
+    `
 
     return NextResponse.json({ success: true, isNew: true, message: "Book added to database" })
   } catch (error) {

@@ -1,8 +1,6 @@
-import { neon } from "@neondatabase/serverless"
+import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
 import { Groq } from "groq-sdk"
-
-const sql = neon(process.env.NEON_DATABASE_URL!)
 
 export async function POST() {
   try {
@@ -11,9 +9,9 @@ export async function POST() {
     })
 
     // Get books without descriptions
-    const booksWithoutDesc = await sql.query(
-      `SELECT id, title, author FROM books WHERE (description IS NULL OR description = '') AND title IS NOT NULL LIMIT 50`
-    )
+    const booksWithoutDesc = await sql`
+      SELECT id, title, author FROM books WHERE (description IS NULL OR description = '') AND title IS NOT NULL LIMIT 50
+    `
 
     if (!booksWithoutDesc || booksWithoutDesc.length === 0) {
       return NextResponse.json({ message: "All books have descriptions", updated: 0 })
@@ -24,7 +22,7 @@ export async function POST() {
     for (const book of booksWithoutDesc) {
       try {
         // Generate description using Groq
-        const message = await groq.messages.create({
+        const completion = await groq.chat.completions.create({
           model: "mixtral-8x7b-32768",
           max_tokens: 150,
           messages: [
@@ -35,11 +33,13 @@ export async function POST() {
           ],
         })
 
-        const description = message.content[0]?.type === "text" ? message.content[0].text : null
+        const description = completion.choices[0]?.message?.content
 
         if (description) {
           // Update the book with the generated description
-          await sql.query(`UPDATE books SET description = $1 WHERE id = $2`, [description, book.id])
+          await sql`
+            UPDATE books SET description = ${description} WHERE id = ${book.id}
+          `
           updated++
           console.log(`[v0] Generated description for: ${book.title}`)
         }

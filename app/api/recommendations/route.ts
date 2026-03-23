@@ -1,28 +1,25 @@
-import { neon } from "@neondatabase/serverless"
+import { sql } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
-
-const sql = neon(process.env.NEON_DATABASE_URL!)
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
 
-    const books = await sql.query(
-      `SELECT id, title, author, genre, description FROM books 
-       WHERE genre IS NOT NULL AND genre != '' 
-       ORDER BY genre, title
-       LIMIT 500`
-    )
+    const books = await sql`
+      SELECT id, title, author, genre, description FROM books 
+      WHERE genre IS NOT NULL AND genre != '' 
+      ORDER BY genre, title
+      LIMIT 500
+    `
 
     // Get user's reading list if userId is provided
-    let userReadingList: Array<{ book_title: string; book_author: string }> = []
+    let userReadingList: any[] = []
     if (userId) {
       try {
-        const userList = await sql.query(
-          `SELECT book_title, book_author FROM reading_list WHERE user_id = $1`,
-          [userId]
-        )
+        const userList = await sql`
+          SELECT book_title, book_author FROM reading_list WHERE user_id = ${userId}
+        `
         if (userList && userList.length > 0) {
           userReadingList = userList
         }
@@ -32,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Group books by genre and filter out books in reading list
-    const booksByGenre: Record<string, Array<{ id: string; title: string; author: string; genre: string; description: string | null }>> = {}
+    const booksByGenre: Record<string, any[]> = {}
 
     if (books) {
       for (const book of books) {

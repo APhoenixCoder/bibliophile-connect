@@ -10,11 +10,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    await sql.query(
-      `INSERT INTO review_replies (review_id, user_id, reply_text)
-       VALUES ($1, $2, $3)`,
-      [reviewId, userId, reply_text]
-    )
+    await sql`
+      INSERT INTO review_replies (review_id, user_id, reply_text)
+      VALUES (${reviewId}, ${userId}, ${reply_text})
+    `
 
     return NextResponse.json({ success: true })
   } catch (error) {

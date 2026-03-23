@@ -1,14 +1,12 @@
+import { sql } from "@/lib/db"
 import { NextRequest, NextResponse } from 'next/server'
-import { neon } from '@neondatabase/serverless'
-
-const sql = neon(process.env.NEON_DATABASE_URL!)
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id
+    const { id: userId } = await params
 
     if (!userId) {
       return NextResponse.json(
