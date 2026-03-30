@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { BookOpen, Star, Plus, ArrowLeft } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { BookOpen, Star, Plus, ArrowLeft, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -39,6 +40,7 @@ export default function RecommendationsPage() {
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [addingToList, setAddingToList] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -152,6 +154,28 @@ export default function RecommendationsPage() {
     )
   }
 
+  const getFilteredBooks = () => {
+    if (!searchQuery.trim()) return {}
+    
+    const query = searchQuery.toLowerCase()
+    const filtered: Record<string, Book[]> = {}
+    
+    Object.entries(booksByGenre).forEach(([genre, books]) => {
+      const genreBooks = books.filter(book =>
+        book.title.toLowerCase().includes(query) ||
+        book.author.toLowerCase().includes(query) ||
+        book.description?.toLowerCase().includes(query)
+      )
+      if (genreBooks.length > 0) {
+        filtered[genre] = genreBooks
+      }
+    })
+    
+    return filtered
+  }
+
+  const displayBooks = searchQuery.trim() ? getFilteredBooks() : (selectedGenre ? { [selectedGenre]: booksByGenre[selectedGenre] || [] } : {})
+
   return (
     <main className="min-h-screen bg-background py-8 px-4 md:px-6">
       <div className="max-w-6xl mx-auto">
@@ -169,8 +193,69 @@ export default function RecommendationsPage() {
           </Link>
         </div>
 
-        {/* Genre Cards Grid */}
-        {!selectedGenre ? (
+        {/* Search Bar */}
+        <div className="mb-8 relative">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search books by title, author, or keywords..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-4 pr-10 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Genre Cards Grid or Search Results */}
+        {searchQuery.trim() ? (
+          <div>
+            {/* Search Results */}
+            {Object.keys(displayBooks).length === 0 ? (
+              <div className="text-center py-12">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No books found matching "{searchQuery}"</p>
+              </div>
+            ) : (
+              <div>
+                {Object.entries(displayBooks).map(([genre, books]) => (
+                  <div key={genre} className="mb-8">
+                    <h2 className="text-2xl font-serif font-bold mb-4">{genre}</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {books.map((book) => (
+                        <Card key={book.id} className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow border-border">
+                          <CardHeader>
+                            <CardTitle className="font-serif line-clamp-2 text-lg">{book.title}</CardTitle>
+                            <CardDescription className="line-clamp-1">{book.author}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="flex-1 flex flex-col">
+                            <p className="text-sm text-foreground line-clamp-3 mb-4 flex-1">
+                              {book.description || 'No description available'}
+                            </p>
+                            <Button
+                              onClick={() => fetchReviews(book)}
+                              variant="outline"
+                              className="w-full"
+                            >
+                              View Reviews & Details
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : !selectedGenre ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {genres.map((genre) => (
               <Card
