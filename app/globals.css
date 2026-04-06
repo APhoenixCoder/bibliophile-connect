@@ -17,6 +17,13 @@
   font-style: italic;
 }
 
+@font-face {
+  font-family: "Merriweather";
+  src: url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
+  font-weight: 400;
+  font-style: normal;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -139,5 +146,16 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Override fonts on Apple devices (iPhone, iPad, macOS Safari) */
+@supports (-webkit-appearance: none) and (-webkit-touch-callout: none) {
+  @media (max-width: 1024px) {
+    body {
+      --font-sans: "Merriweather", serif;
+      --font-serif: "Merriweather", serif;
+      font-family: "Merriweather", serif;
+    }
   }
 }
