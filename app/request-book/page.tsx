@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,7 @@ interface Genre {
 
 export default function RequestBookPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
   const [title, setTitle] = useState(searchParams.get('title') || '')
@@ -91,9 +92,9 @@ export default function RequestBookPage() {
           title: 'Success',
           description: 'Book request submitted! We will review it and add it to our database soon.',
         })
-        setTitle('')
-        setAuthor('')
-        setGenre('')
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
       } else {
         const error = await res.json()
         toast({
