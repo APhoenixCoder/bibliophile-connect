@@ -111,6 +111,16 @@ export default function DashboardPage() {
     []
   )
 
+  const sortBooksByAuthorSurname = (books: BookEntry[]): BookEntry[] => {
+    return [...books].sort((a, b) => {
+      const getSurname = (author: string) => {
+        const parts = author.trim().split(/\s+/)
+        return parts[parts.length - 1].toLowerCase()
+      }
+      return getSurname(a.author).localeCompare(getSurname(b.author))
+    })
+  }
+
   useEffect(() => {
     fetchDashboardData()
   }, [])
@@ -558,8 +568,8 @@ export default function DashboardPage() {
                 {loading ? (
                   <p className="text-muted-foreground">Loading...</p>
                 ) : booksRead.length > 0 ? (
-                  <div className="space-y-3">
-                    {booksRead.slice(0, 5).map((book, index) => (
+                  <div className="h-64 overflow-y-auto pr-2 space-y-3">
+                    {sortBooksByAuthorSurname(booksRead).map((book, index) => (
                       <div key={index} className="p-3 bg-muted rounded-md flex items-center justify-between group">
                         <div className="flex-1">
                           <p className="font-medium text-foreground">{book.title}</p>
@@ -575,7 +585,7 @@ export default function DashboardPage() {
                             </button>
                           </Link>
                           <button
-                            onClick={() => setDeleteConfirm({ type: "read", index })}
+                            onClick={() => setDeleteConfirm({ type: "read", index: booksRead.indexOf(book) })}
                             className="p-1 text-destructive hover:bg-destructive/10 rounded"
                             title="Delete book"
                           >
@@ -584,11 +594,6 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     ))}
-                    {booksRead.length > 5 && (
-                      <p className="text-sm text-muted-foreground text-center pt-2">
-                        and {booksRead.length - 5} more...
-                      </p>
-                    )}
                   </div>
                 ) : (
                   <p className="text-muted-foreground">No books added yet. Update your profile to add books!</p>
@@ -706,8 +711,8 @@ export default function DashboardPage() {
                 {loading ? (
                   <p className="text-muted-foreground">Loading...</p>
                 ) : readingList.length > 0 ? (
-                  <div className="space-y-3">
-                    {readingList.slice(0, 5).map((book, index) => (
+                  <div className="h-64 overflow-y-auto pr-2 space-y-3">
+                    {sortBooksByAuthorSurname(readingList).map((book, index) => (
                       <div key={index} className="p-3 bg-muted rounded-md flex items-center justify-between group">
                         <div className="flex-1">
                           <p className="font-medium text-foreground">{book.title}</p>
@@ -715,14 +720,14 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => setMarkAsReadConfirm({ book, index })}
+                            onClick={() => setMarkAsReadConfirm({ book, index: readingList.indexOf(book) })}
                             className="p-1 text-accent hover:bg-accent/10 rounded"
                             title="Mark as read"
                           >
                             <CheckCircle className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => setDeleteConfirm({ type: "list", index })}
+                            onClick={() => setDeleteConfirm({ type: "list", index: readingList.indexOf(book) })}
                             className="p-1 text-destructive hover:bg-destructive/10 rounded"
                             title="Delete book"
                           >
@@ -731,11 +736,6 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     ))}
-                    {readingList.length > 5 && (
-                      <p className="text-sm text-muted-foreground text-center pt-2">
-                        and {readingList.length - 5} more...
-                      </p>
-                    )}
                   </div>
                 ) : (
                   <p className="text-muted-foreground">No books in your reading list yet!</p>
